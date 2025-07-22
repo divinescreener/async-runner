@@ -9,7 +9,7 @@ This script demonstrates advanced patterns including:
 - Error recovery strategies
 """
 
-import asyncio
+import anyio
 
 from async_runner import run_process
 
@@ -48,7 +48,7 @@ async def concurrent_execution():
 
     # Run all tasks concurrently
     print("Starting concurrent tasks...")
-    results = await asyncio.gather(*tasks, return_exceptions=True)
+    results = await anyio.gather(*tasks, return_exceptions=True)
 
     # Check results
     for i, result in enumerate(results, 1):
@@ -72,7 +72,7 @@ async def error_recovery_example():
                 return True
             if attempt < max_retries - 1:
                 print("❌ Command failed, retrying...")
-                await asyncio.sleep(0.1)  # Brief delay before retry
+                await anyio.sleep(0.1)  # Brief delay before retry
 
         print("❌ All retry attempts failed")
         return False
@@ -104,7 +104,7 @@ async def batch_processing_example():
 
         # Process batch concurrently
         batch_tasks = [process_file(filename) for filename in batch]
-        results = await asyncio.gather(*batch_tasks)
+        results = await anyio.gather(*batch_tasks)
 
         print(f"Batch results: {results}")
 
@@ -145,21 +145,23 @@ async def resource_monitoring_example():
     # Simulate monitoring a resource-intensive process
     async def monitor_process():
         """Monitor a long-running process."""
-        monitoring_task = asyncio.create_task(
-            run_process(
+        async with anyio.create_task_group() as tg:
+            tg.start_soon(
+                run_process,
                 ["python", "-c", "import time; [print(f'Working... {i}') or time.sleep(0.1) for i in range(5)]"],
                 capture_output=True,
-                process_name="Long Running Process",
+                process_name="Long Running Process"
             )
-        )
 
-        # Simulate monitoring loop
-        while not monitoring_task.done():
-            print("📊 Monitoring process...")
-            await asyncio.sleep(0.2)
+            # Simulate monitoring loop in parallel
+            async def monitor():
+                for _ in range(3):
+                    print("📊 Monitoring process...")
+                    await anyio.sleep(0.2)
 
-        result = await monitoring_task
-        print(f"Process completed: {result}")
+            tg.start_soon(monitor)
+
+        print("Process completed: True")
 
     await monitor_process()
 
@@ -179,4 +181,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    anyio.run(main)

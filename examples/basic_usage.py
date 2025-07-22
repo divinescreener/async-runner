@@ -9,7 +9,7 @@ This script demonstrates fundamental usage patterns including:
 - Process naming
 """
 
-import asyncio
+import anyio
 
 from async_runner import run_process
 
@@ -86,4 +86,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    anyio.run(main)

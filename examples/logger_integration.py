@@ -6,10 +6,11 @@ This script demonstrates how to integrate divine-async-runner with various
 logging systems and patterns.
 """
 
-import asyncio
 import logging
 import sys
 from datetime import datetime
+
+import anyio
 
 from async_runner import configure_logger, run_process
 
@@ -145,4 +146,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    anyio.run(main)
