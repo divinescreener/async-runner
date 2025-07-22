@@ -183,7 +183,7 @@ async def resource_monitoring_example():
 
 async def main():
     """Run all advanced usage examples."""
-    print("Divine Async Runner - Advanced Usage Examples\n")
+    print("Async Runner - Advanced Usage Examples\n")
 
     await new_session_example()
     await concurrent_execution()

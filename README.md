@@ -19,7 +19,7 @@ A unified async process runner with configurable output handling and robust erro
 - ✅ **100% Test Coverage**: Thoroughly tested with both asyncio and trio backends
 - 🐍 **Type Safe**: Full type hints for better IDE support and fewer runtime errors
 
-## 🤔 Why Divine Async Runner?
+## 🤔 Why Async Runner?
 
 ### The Problem
 Running subprocesses in async Python applications is surprisingly complex:
@@ -29,7 +29,7 @@ Running subprocesses in async Python applications is surprisingly complex:
 - Different async libraries (asyncio/trio) have different APIs
 
 ### Our Solution
-Divine Async Runner provides a battle-tested, production-ready solution:
+Async Runner provides a battle-tested, production-ready solution:
 
 ```python
 # Instead of this complex code:
@@ -308,7 +308,7 @@ Configure a custom logger for all process output.
 
 ## 🛡️ Error Handling
 
-Divine Async Runner provides comprehensive error handling:
+Async Runner provides comprehensive error handling:
 
 ```python
 import asyncio

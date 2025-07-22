@@ -75,7 +75,7 @@ async def error_handling():
 
 async def main():
     """Run all examples."""
-    print("Divine Async Runner - Basic Usage Examples\n")
+    print("Async Runner - Basic Usage Examples\n")
 
     await simple_execution()
     await output_capture()

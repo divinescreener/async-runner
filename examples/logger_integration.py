@@ -135,7 +135,7 @@ async def logger_switching_example():
 
 async def main():
     """Run all logger integration examples."""
-    print("Divine Async Runner - Logger Integration Examples\n")
+    print("Async Runner - Logger Integration Examples\n")
 
     await standard_logging_example()
     await structured_logging_example()
