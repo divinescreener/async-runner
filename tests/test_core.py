@@ -3,8 +3,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from async_runner import configure_logger, run_process
-from async_runner.core import DefaultLogger, _logger
+from async_runner import configure_logger, core, run_process
+from async_runner.core import DefaultLogger
 
 
 class MockLogger:
@@ -227,7 +227,7 @@ def test_configure_logger():
 
     # Test that the logger is actually used by importing and checking the module
     # Verify the configured logger was applied
-    assert _logger is mock_logger
+    assert core._logger is mock_logger
 
 
 def test_default_logger():
