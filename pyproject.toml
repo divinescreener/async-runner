@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "divine-async-runner"
-version = "0.1.1"
+version = "0.1.2"
 description = "A unified async process runner with configurable output handling and robust error management."
 authors = ["DIVINE <admin@divine.sh>"]
 readme = "README.md"
