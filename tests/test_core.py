@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from async_runner import configure_logger, run_process
+from async_runner.core import DefaultLogger, _logger
 
 
 class MockLogger:
@@ -225,15 +226,12 @@ def test_configure_logger():
     configure_logger(mock_logger)
 
     # Test that the logger is actually used by importing and checking the module
-    from async_runner.core import _logger
-
+    # Verify the configured logger was applied
     assert _logger is mock_logger
 
 
 def test_default_logger():
     """Test the DefaultLogger class methods"""
-    from async_runner.core import DefaultLogger
-
     logger = DefaultLogger()
 
     # Test all methods exist and can be called (they print to stdout/stderr)
