@@ -1,4 +1,4 @@
-import subprocess
+import subprocess  # nosec B404: subprocess is used intentionally for process execution
 from typing import Protocol
 
 import anyio
