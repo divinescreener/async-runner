@@ -39,9 +39,10 @@ async def concurrent_execution():
     # Run all tasks concurrently using anyio task groups
     print("Starting concurrent tasks...")
     results = []
-    
+
     async with anyio.create_task_group() as tg:
         for i in range(1, 4):
+
             async def run_task(task_num):
                 try:
                     result = await run_process(
@@ -50,9 +51,9 @@ async def concurrent_execution():
                         process_name=f"Task {task_num}",
                     )
                     results.append((task_num, result))
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     results.append((task_num, e))
-            
+
             tg.start_soon(run_task, i)
 
     # Sort results by task number and check them
@@ -110,15 +111,21 @@ async def batch_processing_example():
 
         # Process batch concurrently using anyio task groups
         batch_results = []
-        
+        results_dict = {}
+
         async with anyio.create_task_group() as tg:
             for filename in batch:
-                async def process_batch_file(fname):
-                    result = await process_file(fname)
-                    batch_results.append(result)
-                
-                tg.start_soon(process_batch_file, filename)
 
+                def make_batch_processor(fname):
+                    async def process_batch_file():
+                        result = await process_file(fname)
+                        results_dict[fname] = result  # noqa: B023
+
+                    return process_batch_file
+
+                tg.start_soon(make_batch_processor(filename))
+
+        batch_results = [results_dict[filename] for filename in batch]
         print(f"Batch results: {batch_results}")
 
 
@@ -159,13 +166,14 @@ async def resource_monitoring_example():
     async def monitor_process():
         """Monitor a long-running process."""
         async with anyio.create_task_group() as tg:
+
             async def run_long_process():
                 return await run_process(
                     ["python3", "-c", "import time; [print(f'Working... {i}') or time.sleep(0.1) for i in range(5)]"],
                     capture_output=True,
-                    process_name="Long Running Process"
+                    process_name="Long Running Process",
                 )
-            
+
             tg.start_soon(run_long_process)
 
             # Simulate monitoring loop in parallel
