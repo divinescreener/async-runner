@@ -33,7 +33,7 @@ async def output_capture():
 
     # Capture output from a command
     success = await run_process(
-        ["python", "-c", "print('Hello from Python'); import sys; print('Error message', file=sys.stderr)"],
+        ["python3", "-c", "print('Hello from Python'); import sys; print('Error message', file=sys.stderr)"],
         capture_output=True,
         process_name="Python Script",
     )

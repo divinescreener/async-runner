@@ -83,7 +83,7 @@ async def standard_logging_example():
 
     # Run some commands
     await run_process(
-        ["python", "-c", "print('Standard logging output')"], capture_output=True, process_name="Standard Logger Test"
+        ["python3", "-c", "print('Standard logging output')"], capture_output=True, process_name="Standard Logger Test"
     )
 
 

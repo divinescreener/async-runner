@@ -21,7 +21,7 @@ async def new_session_example():
     # Start a process in a new session (useful for daemons/background processes)
     success = await run_process(
         [
-            "python",
+            "python3",
             "-c",
             "import time; print('Background process started'); time.sleep(0.5); print('Background process done')",
         ],
@@ -36,26 +36,32 @@ async def concurrent_execution():
     """Demonstrate running multiple processes concurrently."""
     print("\n=== Concurrent Execution ===")
 
-    # Define multiple tasks
-    tasks = [
-        run_process(
-            ["python", "-c", f"import time; time.sleep(0.{i}); print(f'Task {i} complete')"],
-            capture_output=True,
-            process_name=f"Task {i}",
-        )
-        for i in range(1, 4)
-    ]
-
-    # Run all tasks concurrently
+    # Run all tasks concurrently using anyio task groups
     print("Starting concurrent tasks...")
-    results = await anyio.gather(*tasks, return_exceptions=True)
+    results = []
+    
+    async with anyio.create_task_group() as tg:
+        for i in range(1, 4):
+            async def run_task(task_num):
+                try:
+                    result = await run_process(
+                        ["python3", "-c", f"import time; time.sleep(0.{task_num}); print(f'Task {task_num} complete')"],
+                        capture_output=True,
+                        process_name=f"Task {task_num}",
+                    )
+                    results.append((task_num, result))
+                except Exception as e:
+                    results.append((task_num, e))
+            
+            tg.start_soon(run_task, i)
 
-    # Check results
-    for i, result in enumerate(results, 1):
+    # Sort results by task number and check them
+    results.sort(key=lambda x: x[0])
+    for task_num, result in results:
         if isinstance(result, Exception):
-            print(f"Task {i} failed with exception: {result}")
+            print(f"Task {task_num} failed with exception: {result}")
         else:
-            print(f"Task {i} succeeded: {result}")
+            print(f"Task {task_num} succeeded: {result}")
 
 
 async def error_recovery_example():
@@ -78,7 +84,7 @@ async def error_recovery_example():
         return False
 
     # Test with a command that randomly fails
-    await retry_command(["python", "-c", "import random; exit(0 if random.random() > 0.7 else 1)"])
+    await retry_command(["python3", "-c", "import random; exit(0 if random.random() > 0.7 else 1)"])
 
 
 async def batch_processing_example():
@@ -91,7 +97,7 @@ async def batch_processing_example():
     async def process_file(filename):
         """Simulate file processing."""
         return await run_process(
-            ["python", "-c", f"print(f'Processing {filename}'); import time; time.sleep(0.1)"],
+            ["python3", "-c", f"print(f'Processing {filename}'); import time; time.sleep(0.1)"],
             capture_output=True,
             process_name=f"Process {filename}",
         )
@@ -102,11 +108,18 @@ async def batch_processing_example():
         batch = files[i : i + batch_size]
         print(f"Processing batch: {batch}")
 
-        # Process batch concurrently
-        batch_tasks = [process_file(filename) for filename in batch]
-        results = await anyio.gather(*batch_tasks)
+        # Process batch concurrently using anyio task groups
+        batch_results = []
+        
+        async with anyio.create_task_group() as tg:
+            for filename in batch:
+                async def process_batch_file(fname):
+                    result = await process_file(fname)
+                    batch_results.append(result)
+                
+                tg.start_soon(process_batch_file, filename)
 
-        print(f"Batch results: {results}")
+        print(f"Batch results: {batch_results}")
 
 
 async def pipeline_example():
@@ -116,9 +129,9 @@ async def pipeline_example():
     # Simulate a data processing pipeline
     steps = [
         (["echo", "raw_data"], "Data Ingestion"),
-        (["python", "-c", "print('cleaned_data')"], "Data Cleaning"),
-        (["python", "-c", "print('processed_data')"], "Data Processing"),
-        (["python", "-c", "print('final_output')"], "Final Output"),
+        (["python3", "-c", "print('cleaned_data')"], "Data Cleaning"),
+        (["python3", "-c", "print('processed_data')"], "Data Processing"),
+        (["python3", "-c", "print('final_output')"], "Final Output"),
     ]
 
     print("Running pipeline steps sequentially...")
@@ -146,12 +159,14 @@ async def resource_monitoring_example():
     async def monitor_process():
         """Monitor a long-running process."""
         async with anyio.create_task_group() as tg:
-            tg.start_soon(
-                run_process,
-                ["python", "-c", "import time; [print(f'Working... {i}') or time.sleep(0.1) for i in range(5)]"],
-                capture_output=True,
-                process_name="Long Running Process"
-            )
+            async def run_long_process():
+                return await run_process(
+                    ["python3", "-c", "import time; [print(f'Working... {i}') or time.sleep(0.1) for i in range(5)]"],
+                    capture_output=True,
+                    process_name="Long Running Process"
+                )
+            
+            tg.start_soon(run_long_process)
 
             # Simulate monitoring loop in parallel
             async def monitor():
