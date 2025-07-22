@@ -1,80 +1,148 @@
 # Async Runner
 
-A unified async process runner with configurable output handling and robust error management.
+[![PyPI version](https://badge.fury.io/py/divine-async-runner.svg)](https://badge.fury.io/py/divine-async-runner)
+[![Python versions](https://img.shields.io/pypi/pyversions/divine-async-runner.svg)](https://pypi.org/project/divine-async-runner/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Test Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](https://github.com/divinescreener/divine-async-runner)
+[![Security Scan](https://img.shields.io/badge/security-bandit-green.svg)](https://github.com/divinescreener/divine-async-runner)
 
-This package provides a clean, efficient way to run subprocesses asynchronously using anyio, with optional output capture, logging integration, and comprehensive error handling.
+A unified async process runner with configurable output handling and robust error management. Built on [anyio](https://github.com/agronholm/anyio) for compatibility with asyncio and trio.
 
-## Features
+## ✨ Features
 
-- **Async Process Execution**: Built on anyio for efficient async subprocess management
-- **Configurable Output Handling**: Choose whether to capture and log stdout/stderr
-- **Robust Error Management**: Comprehensive exception handling and process failure detection
-- **Custom Logger Support**: Integrate with your existing logging infrastructure
-- **Session Control**: Option to start processes in new sessions
-- **Clean API**: Simple `run_process()` function for easy integration
-- **100% Test Coverage**: Thoroughly tested for reliability and stability
+- 🚀 **Async Process Execution**: Built on anyio for compatibility with asyncio and trio
+- 📝 **Configurable Output Handling**: Choose whether to capture and log stdout/stderr
+- 🛡️ **Robust Error Management**: Comprehensive exception handling and process failure detection  
+- 🔧 **Custom Logger Support**: Integrate with any logging infrastructure via simple protocol
+- 🔄 **Session Control**: Option to start processes in new sessions (useful for daemons)
+- 🎯 **Clean API**: Single `run_process()` function for all your subprocess needs
+- ✅ **100% Test Coverage**: Thoroughly tested with both asyncio and trio backends
+- 🐍 **Type Safe**: Full type hints for better IDE support and fewer runtime errors
 
-## Why Use Divine Async Runner?
+## 🤔 Why Divine Async Runner?
 
-### Process Management Made Simple
-Running subprocesses asynchronously can be complex, especially when you need to handle output streaming, error logging, and process lifecycle management. Divine Async Runner abstracts away this complexity into a single, reliable function.
+### The Problem
+Running subprocesses in async Python applications is surprisingly complex:
+- Output streaming requires careful task management
+- Error handling needs to cover multiple failure modes
+- Resource cleanup must be guaranteed
+- Different async libraries (asyncio/trio) have different APIs
 
-### Production-Ready Error Handling
-The library handles various edge cases including:
-- Process failures with detailed error reporting
-- Stream reading exceptions
-- Task cancellation scenarios
-- Resource cleanup
+### Our Solution
+Divine Async Runner provides a battle-tested, production-ready solution:
 
-### Flexible Integration
-- Drop-in replacement for basic subprocess calls
-- Optional logger configuration for existing applications
-- Minimal dependencies (only anyio required)
+```python
+# Instead of this complex code:
+try:
+    async with await anyio.open_process(cmd) as process:
+        async with anyio.create_task_group() as tg:
+            async def read_stream(stream, name):
+                async for line in stream:
+                    print(f"{name}: {line.decode().strip()}")
+            
+            if process.stdout:
+                tg.start_soon(read_stream, process.stdout, "stdout")
+            if process.stderr:
+                tg.start_soon(read_stream, process.stderr, "stderr")
+        
+        await process.wait()
+except Exception as e:
+    print(f"Process failed: {e}")
 
-## Installation
+# Just use this:
+success = await run_process(cmd, capture_output=True)
+```
+
+## 📦 Installation
 
 ```bash
-# For end users
+# Using pip
 pip install divine-async-runner
 
+# Using poetry
+poetry add divine-async-runner
+
 # For development
+git clone https://github.com/divinescreener/divine-async-runner
+cd divine-async-runner
 poetry install
 ```
 
-## Usage
+### Requirements
+- Python 3.13+
+- anyio (automatically installed)
+- trio (optional, for trio backend support)
 
-### Basic Usage
+## 🚀 Quick Start
 
 ```python
 import asyncio
 from async_runner import run_process
 
 async def main():
-    # Simple command execution
-    success = await run_process(["echo", "Hello World"])
-    print(f"Command succeeded: {success}")
-
-    # Command with arguments
-    success = await run_process(["python", "--version"])
-    print(f"Python version check: {success}")
+    # Run a simple command
+    success = await run_process(["echo", "Hello, World!"])
+    print(f"Success: {success}")
+    
+    # Capture output
+    await run_process(
+        ["python", "--version"],
+        capture_output=True,
+        process_name="Python Version Check"
+    )
 
 asyncio.run(main())
 ```
 
-### With Output Capture
+## 📖 Usage Examples
+
+### Basic Command Execution
 
 ```python
 import asyncio
 from async_runner import run_process
 
 async def main():
-    # Capture and log output
+    # Simple command
+    success = await run_process(["echo", "Hello World"])
+    
+    # Command with multiple arguments
+    success = await run_process(["git", "status", "--porcelain"])
+    
+    # Use process_name for better logging
     success = await run_process(
-        ["ls", "-la"],
-        capture_output=True,
-        process_name="Directory Listing"
+        ["npm", "install"],
+        process_name="NPM Install"
     )
-    print(f"Directory listing completed: {success}")
+
+asyncio.run(main())
+```
+
+### Capturing and Processing Output
+
+```python
+import asyncio
+from async_runner import run_process
+
+async def main():
+    # Output will be logged line by line as it arrives
+    success = await run_process(
+        ["python", "-c", """
+import time
+for i in range(5):
+    print(f'Progress: {i+1}/5')
+    time.sleep(0.5)
+        """],
+        capture_output=True,
+        process_name="Progress Monitor"
+    )
+    
+    # Error output is captured separately
+    await run_process(
+        ["python", "-c", "import sys; sys.stderr.write('Error occurred!')"],
+        capture_output=True,
+        process_name="Error Example"
+    )
 
 asyncio.run(main())
 ```
@@ -113,89 +181,234 @@ async def main():
 asyncio.run(main())
 ```
 
-### Advanced Usage
+### Advanced Process Management
 
 ```python
 import asyncio
 from async_runner import run_process
 
-async def main():
-    # Start process in new session (useful for daemons)
-    success = await run_process(
-        ["python", "-m", "http.server", "8000"],
-        start_new_session=True,
+async def deploy_service():
+    """Example deployment workflow"""
+    
+    # Run tests first
+    if not await run_process(
+        ["pytest", "tests/"],
         capture_output=True,
-        process_name="HTTP Server"
+        process_name="Unit Tests"
+    ):
+        print("❌ Tests failed, aborting deployment")
+        return False
+    
+    # Build the application
+    if not await run_process(
+        ["docker", "build", "-t", "myapp:latest", "."],
+        capture_output=True,
+        process_name="Docker Build"
+    ):
+        print("❌ Build failed")
+        return False
+    
+    # Start the service in a new session
+    success = await run_process(
+        ["docker", "run", "-d", "-p", "8080:8080", "myapp:latest"],
+        start_new_session=True,
+        process_name="Service Startup"
     )
     
-    # Handle process failure
-    if not success:
-        print("Server failed to start")
+    print("✅ Deployment complete!" if success else "❌ Deployment failed")
+    return success
+
+async def main():
+    await deploy_service()
 
 asyncio.run(main())
 ```
 
-## API Reference
-
-### `run_process(command, *, capture_output=False, start_new_session=False, process_name="Unknown")`
-
-Run a subprocess asynchronously.
-
-**Parameters:**
-- `command` (List[str]): Command and arguments to execute
-- `capture_output` (bool): Whether to capture and log stdout/stderr (default: False)
-- `start_new_session` (bool): Whether to start in a new session (default: False)
-- `process_name` (str): Name for logging purposes (default: "Unknown")
-
-**Returns:**
-- `bool`: True if process completed successfully (return code 0), False otherwise
-
-### `configure_logger(logger)`
-
-Configure a custom logger for the async runner.
-
-**Parameters:**
-- `logger`: Logger instance implementing the Logger protocol (info, error, warning methods)
-
-## Error Handling
-
-The library handles several types of errors gracefully:
+### Running Multiple Processes Concurrently
 
 ```python
 import asyncio
 from async_runner import run_process
 
 async def main():
-    # Process that will fail
-    success = await run_process(["nonexistent-command"])
-    if not success:
-        print("Command failed or doesn't exist")
+    # Run multiple processes concurrently
+    tasks = [
+        run_process(["python", "-c", "import time; time.sleep(1); print('Task 1')"], 
+                   capture_output=True, process_name="Task 1"),
+        run_process(["python", "-c", "import time; time.sleep(1); print('Task 2')"], 
+                   capture_output=True, process_name="Task 2"),
+        run_process(["python", "-c", "import time; time.sleep(1); print('Task 3')"], 
+                   capture_output=True, process_name="Task 3"),
+    ]
     
-    # Process with non-zero exit code
-    success = await run_process(["python", "-c", "exit(1)"])
-    if not success:
-        print("Process returned non-zero exit code")
+    # All three will run in parallel
+    results = await asyncio.gather(*tasks)
+    print(f"All tasks completed. Success: {all(results)}")
 
 asyncio.run(main())
 ```
 
-## Contributing
+### Using with Trio
 
-Contributions are welcome! Please ensure all changes include appropriate tests to maintain 100% coverage.
+```python
+import trio
+from async_runner import run_process
 
-## Real-World Examples
+async def main():
+    # Works seamlessly with trio
+    success = await run_process(
+        ["echo", "Hello from Trio!"],
+        capture_output=True,
+        process_name="Trio Example"
+    )
+    print(f"Success: {success}")
 
-Check out the `examples/` directory for practical use cases:
+trio.run(main)
+```
 
-- **Basic Usage**: Simple subprocess execution
-- **Output Processing**: Capturing and processing command output
-- **Logger Integration**: Using with existing logging systems
-- **Error Handling**: Robust error handling patterns
+## 📚 API Reference
 
-## License
+### `run_process()`
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+```python
+async def run_process(
+    command: list[str],
+    *,
+    capture_output: bool = False,
+    start_new_session: bool = False,
+    process_name: str = "Unknown"
+) -> bool
+```
 
-## Security
+**Parameters:**
 
-For security concerns, please see [SECURITY.md](SECURITY.md).
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `command` | `list[str]` | *required* | Command and arguments to execute |
+| `capture_output` | `bool` | `False` | Whether to capture and log stdout/stderr |
+| `start_new_session` | `bool` | `False` | Whether to start process in a new session |
+| `process_name` | `str` | `"Unknown"` | Name for logging identification |
+
+**Returns:**
+- `bool`: `True` if process completed successfully (return code 0), `False` otherwise
+
+**Raises:**
+- Re-raises `anyio.get_cancelled_exc_class()` if the task is cancelled
+
+### `configure_logger()`
+
+```python
+def configure_logger(logger: Logger) -> None
+```
+
+Configure a custom logger for all process output.
+
+**Parameters:**
+- `logger`: Object implementing the `Logger` protocol with `info()`, `error()`, and `warning()` methods
+
+## 🛡️ Error Handling
+
+Divine Async Runner provides comprehensive error handling:
+
+```python
+import asyncio
+from async_runner import run_process, configure_logger
+
+class ErrorTracker:
+    """Example error tracking logger"""
+    def __init__(self):
+        self.errors = []
+    
+    def info(self, msg: str): 
+        print(f"ℹ️  {msg}")
+    
+    def error(self, msg: str): 
+        print(f"❌ {msg}")
+        self.errors.append(msg)
+    
+    def warning(self, msg: str): 
+        print(f"⚠️  {msg}")
+
+async def main():
+    tracker = ErrorTracker()
+    configure_logger(tracker)
+    
+    # Command not found
+    await run_process(["nonexistent-command"], process_name="Missing Command")
+    
+    # Non-zero exit code
+    await run_process(["python", "-c", "exit(1)"], process_name="Exit Code 1")
+    
+    # Permission denied (example)
+    await run_process(["cat", "/etc/shadow"], process_name="Permission Test")
+    
+    print(f"\nTotal errors encountered: {len(tracker.errors)}")
+
+asyncio.run(main())
+```
+
+### Handled Error Types
+
+1. **Process Failures**: Non-zero exit codes are logged with the return code
+2. **Command Not Found**: Logged as process execution errors
+3. **Stream Reading Errors**: Handled gracefully with error logging
+4. **Task Cancellation**: Properly propagated with warning log
+5. **Resource Cleanup**: Guaranteed even on exceptions
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/divinescreener/divine-async-runner
+cd divine-async-runner
+
+# Install dependencies
+poetry install
+
+# Set up pre-commit hooks
+./setup-pre-commit.sh
+
+# Run tests
+poetry run pytest
+
+# Run linting
+poetry run ruff check
+poetry run mypy src
+```
+
+## 📂 More Examples
+
+Explore the [`examples/`](examples/) directory for complete, runnable examples:
+
+| Example | Description |
+|---------|-------------|
+| [`basic_usage.py`](examples/basic_usage.py) | Simple subprocess execution patterns |
+| [`advanced_usage.py`](examples/advanced_usage.py) | Concurrent execution, retries, and pipelines |
+| [`logger_integration.py`](examples/logger_integration.py) | Custom logger implementations |
+
+## 🔒 Security
+
+- No shell injection vulnerabilities (command passed as list)
+- Comprehensive error handling prevents resource leaks
+- Regular security scanning with Bandit and Safety
+- See [SECURITY.md](SECURITY.md) for reporting vulnerabilities
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## 🙏 Acknowledgments
+
+- Built on the excellent [anyio](https://github.com/agronholm/anyio) library
+- Inspired by the complexity of subprocess handling in async contexts
+- Thanks to all contributors and users
+
+---
+
+<p align="center">
+  Made with ❤️ by <a href="https://github.com/divinescreener">DIVINE</a>
+</p>
