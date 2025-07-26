@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "divine-async-runner"
-version = "0.1.6"
+version = "0.1.7"
 description = "A unified async process runner with configurable output handling and robust error management."
 authors = [{name = "DIVINE", email = "admin@divine.sh"}]
 readme = "README.md"
