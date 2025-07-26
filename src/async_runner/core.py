@@ -1,5 +1,6 @@
 import subprocess  # nosec B404: subprocess is used intentionally for process execution
-from typing import Protocol
+from collections.abc import Callable
+from typing import Any, Protocol
 
 import anyio
 
@@ -65,7 +66,7 @@ async def run_process(
     stdout = subprocess.PIPE if capture_output else None
     stderr = subprocess.PIPE if capture_output else None
 
-    async def _read_stream(stream, log_method, stream_name):
+    async def _read_stream(stream: Any, log_method: Callable[[str], None], stream_name: str) -> None:  # noqa: ANN401
         """Continuously reads from a stream and logs its output."""
         try:
             async for line in stream:

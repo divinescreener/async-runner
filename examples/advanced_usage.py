@@ -51,7 +51,7 @@ async def concurrent_execution():
                         process_name=f"Task {task_num}",
                     )
                     results.append((task_num, result))
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:
                     results.append((task_num, e))
 
             tg.start_soon(run_task, i)

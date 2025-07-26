@@ -69,7 +69,7 @@ async def error_handling():
                 print("✅ Command succeeded")
             else:
                 print("❌ Command failed")
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             print(f"🚨 Exception occurred: {e}")
 
 

@@ -35,9 +35,10 @@ dev-dependencies = [
 ]
 
 [tool.pytest.ini_options]
-pythonpath   = ["src"]
-testpaths    = ["tests"]
-addopts      = "--cov=async_runner --cov-report term-missing --cov-report xml --cov-report html"
+pythonpath     = ["src"]
+testpaths      = ["tests"]
+addopts        = "--cov=async_runner --cov-report term-missing --cov-report xml --cov-report html"
+asyncio_mode   = "auto"
 
 [tool.ruff]
 target-version = "py313"
@@ -82,11 +83,6 @@ ignore = [
     "E501",    # line too long, handled by ruff format
     "B008",    # do not perform function calls in argument defaults
     "C901",    # too complex
-    "ANN001",  # missing type annotation for function argument
-    "ANN201",  # missing return type annotation for public function
-    "ANN202",  # missing return type annotation for private function
-    "ANN204",  # missing return type annotation for special method __init__
-    "ANN401",  # dynamically typed expressions (Any) are disallowed
     "S101",    # use of assert detected
     "PLR2004", # magic value used in comparison
     "PLR0913", # too many arguments to function call
@@ -122,6 +118,12 @@ ignore = [
     "PT011",   # allow broad pytest.raises in tests
     "RET503",  # allow missing return in tests
 ]
+"examples/*" = [
+    "ANN",     # don't require annotations in examples
+    "S101",    # allow asserts in examples
+    "T201",    # allow print statements in examples
+    "BLE001",  # allow blind except in examples
+]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10
@@ -136,6 +138,7 @@ line-ending               = "auto"
 python_version         = "3.13"
 warn_unused_configs    = true
 ignore_missing_imports = true
+strict                 = true
 
 [[tool.mypy.overrides]]
 module                = "tests.*"
