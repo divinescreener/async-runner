@@ -15,8 +15,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/divinescreener/divine-async-runner"
-Issues = "https://github.com/divinescreener/divine-async-runner/issues"
+Homepage = "https://github.com/divinescreener/async-runner"
+Issues = "https://github.com/divinescreener/async-runner/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/async_runner"]
